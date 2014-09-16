@@ -34,9 +34,7 @@ class FormRequestServiceProvider extends ServiceProvider {
 				{
 					$this->initializeRequest($resolved, $app['request']);
 
-					$resolved->setContainer($app)
-                             ->setRoute($app['Illuminate\Routing\Route'])
-                             ->setRedirector($app['Illuminate\Routing\Redirector']);
+					$resolved->setContainer($app);
 				}
 			});
 		});
