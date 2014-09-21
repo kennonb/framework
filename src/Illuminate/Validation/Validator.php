@@ -347,6 +347,30 @@ class Validator implements ValidatorContract {
 	}
 
 	/**
+ 	 * Returns the data which was valid.
+ 	 *
+	 * @return array
+	 */
+	public function valid()
+	{
+		if ( ! $this->messages) $this->passes();
+
+ 		return array_diff_key($this->data, $this->messages()->toArray());
+	}
+
+	/**
+ 	 * Returns the data which was invalid.
+ 	 *
+	 * @return array
+	 */
+	public function invalid()
+	{
+		if ( ! $this->messages) $this->passes();
+
+ 		return array_intersect_key($this->data, $this->messages()->toArray());
+	}
+
+	/**
 	 * Get the value of a given attribute.
 	 *
 	 * @param  string  $attribute
@@ -404,10 +428,8 @@ class Validator implements ValidatorContract {
 			return array_key_exists($attribute, array_dot($this->data))
                 || array_key_exists($attribute, $this->files);
 		}
-		else
-		{
-			return true;
-		}
+
+		return true;
 	}
 
 	/**
@@ -507,10 +529,8 @@ class Validator implements ValidatorContract {
 		{
 			return $this->validateRequired($attribute, $value);
 		}
-		else
-		{
-			return true;
-		}
+
+		return true;
 	}
 
 	/**
@@ -904,10 +924,8 @@ class Validator implements ValidatorContract {
 		{
 			return $value->getSize() / 1024;
 		}
-		else
-		{
-			return $this->getStringSize($value);
-		}
+
+		return $this->getStringSize($value);
 	}
 
 	/**
@@ -1018,10 +1036,8 @@ class Validator implements ValidatorContract {
 		{
 			return $this->getExtraConditions(array_slice($parameters, 4));
 		}
-		else
-		{
-			return array();
-		}
+
+		return array();
 	}
 
 	/**
@@ -1067,10 +1083,8 @@ class Validator implements ValidatorContract {
 		{
 			return $verifier->getMultiCount($table, $column, $value, $extra);
 		}
-		else
-		{
-			return $verifier->getCount($table, $column, $value, null, null, $extra);
-		}
+
+		return $verifier->getCount($table, $column, $value, null, null, $extra);
 	}
 
 	/**
@@ -1176,27 +1190,25 @@ class Validator implements ValidatorContract {
 	 */
 	protected function validateMimes($attribute, $value, $parameters)
 	{
-		if ( ! $value instanceof File)
+		if ( ! $this->isAValidFileInstance($value))
 		{
 			return false;
 		}
 
-		if ($value instanceof UploadedFile && ! $value->isValid())
-		{
-			return false;
-		}
+		return $value->getPath() != '' && in_array($value->guessExtension(), $parameters);
+	}
 
-		// The Symfony File class should do a decent job of guessing the extension
-		// based on the true MIME type so we'll just loop through the array of
-		// extensions and compare it to the guessed extension of the files.
-		if ($value->getPath() != '')
-		{
-			return in_array($value->guessExtension(), $parameters);
-		}
-		else
-		{
-			return false;
-		}
+	/**
+	 * Check that the given value is a valid file instnace.
+	 *
+	 * @param  mixed  $value
+	 * @return bool
+	 */
+	protected function isAValidFileInstance($value)
+	{
+		if ($value instanceof UploadedFile && ! $value->isValid()) return false;
+
+		return $value instanceof File;
 	}
 
 	/**
@@ -1306,10 +1318,8 @@ class Validator implements ValidatorContract {
 		{
 			return strtotime($value) < strtotime($this->getValue($parameters[0]));
 		}
-		else
-		{
-			return strtotime($value) < $date;
-		}
+
+		return strtotime($value) < $date;
 	}
 
 	/**
@@ -1348,10 +1358,8 @@ class Validator implements ValidatorContract {
 		{
 			return strtotime($value) > strtotime($this->getValue($parameters[0]));
 		}
-		else
-		{
-			return strtotime($value) > $date;
-		}
+
+		return strtotime($value) > $date;
 	}
 
 	/**
@@ -1646,10 +1654,7 @@ class Validator implements ValidatorContract {
 		// If no language line has been specified for the attribute all of the
 		// underscores are removed from the attribute name and that will be
 		// used as default versions of the attribute's displayable names.
-		else
-		{
-			return str_replace('_', ' ', snake_case($attribute));
-		}
+		return str_replace('_', ' ', snake_case($attribute));
 	}
 
 	/**
@@ -1672,10 +1677,8 @@ class Validator implements ValidatorContract {
 		{
 			return $line;
 		}
-		else
-		{
-			return $value;
-		}
+
+		return $value;
 	}
 
 	/**
@@ -1928,10 +1931,8 @@ class Validator implements ValidatorContract {
 		{
 			return str_replace(':date', $this->getAttribute($parameters[0]), $message);
 		}
-		else
-		{
-			return str_replace(':date', $parameters[0], $message);
-		}
+
+		return str_replace(':date', $parameters[0], $message);
 	}
 
 	/**

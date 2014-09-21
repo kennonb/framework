@@ -7,8 +7,9 @@ use ReflectionMethod;
 use ReflectionFunction;
 use ReflectionParameter;
 use Illuminate\Contracts\Container\Container as ContainerContract;
+use Illuminate\Contracts\Container\ContextAwareContainer as ContextAwareContainerContract;
 
-class Container implements ArrayAccess, ContainerContract {
+class Container implements ArrayAccess, ContainerContract, ContextAwareContainerContract {
 
 	/**
 	 * An array of the types that have been resolved.
@@ -39,6 +40,27 @@ class Container implements ArrayAccess, ContainerContract {
 	protected $aliases = array();
 
 	/**
+	 * All of the registered tags.
+	 *
+	 * @var array
+	 */
+	protected $tags = [];
+
+	/**
+	 * The stack of concretions being current built.
+	 *
+	 * @var array
+	 */
+	protected $buildStack = [];
+
+	/**
+	 * The contextual binding map.
+	 *
+	 * @var array
+	 */
+	public $contextual = [];
+
+	/**
 	 * All of the registered rebound callbacks.
 	 *
 	 * @var array
@@ -65,6 +87,17 @@ class Container implements ArrayAccess, ContainerContract {
 	 * @var array
 	 */
 	protected $globalAfterResolvingCallbacks = array();
+
+	/**
+	 * Define a contextual binding.
+	 *
+	 * @param  string  $concrete
+	 * @return \Illuminate\Contracts\Container\ContextualBindingBuilder
+	 */
+	public function when($concrete)
+	{
+		return new ContextualBindingBuilder($this, $concrete);
+	}
 
 	/**
 	 * Determine if a given string is resolvable.
@@ -174,6 +207,18 @@ class Container implements ArrayAccess, ContainerContract {
 
 			return $c->$method($concrete, $parameters);
 		};
+	}
+
+	/**
+	 * Add a contextual binding to the container.
+	 *
+	 * @param  string  $concrete
+	 * @param  string  $abstract
+	 * @param  \Closure|string  $implementation
+	 */
+	public function addContextualBinding($concrete, $abstract, $implementation)
+	{
+		$this->contextual[$concrete][$abstract] = $implementation;
 	}
 
 	/**
@@ -325,7 +370,47 @@ class Container implements ArrayAccess, ContainerContract {
 	}
 
 	/**
-	 * Alias a type to a shorter name.
+	 * Assign a set of tags to a given binding.
+	 *
+	 * @param  array|string  $abstract
+	 * @param  array|dynamic  $tags
+	 * @return void
+	 */
+	public function tag($abstracts, $tags)
+	{
+		$tags = is_array($tags) ? $tags : array_slice(func_get_args(), 1);
+
+		foreach ($tags as $tag)
+		{
+			array_add($this->tags, $tag, []);
+
+			foreach ((array) $abstracts as $abstract)
+			{
+				$this->tags[$tag][] = $abstract;
+			}
+		}
+	}
+
+	/**
+	 * Resolve all of the bindings for a given tag.
+	 *
+	 * @param  array  $tag
+	 * @return array
+	 */
+	public function tagged($tag)
+	{
+		$results = [];
+
+		foreach ($this->tags[$tag] as $abstract)
+		{
+			$results[] = $this->make($abstract);
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Alias a type to a different name.
 	 *
 	 * @param  string  $abstract
 	 * @param  string  $alias
@@ -405,10 +490,8 @@ class Container implements ArrayAccess, ContainerContract {
 		{
 			return $this->reboundCallbacks[$abstract];
 		}
-		else
-		{
-			return array();
-		}
+
+		return array();
 	}
 
 	/**
@@ -427,10 +510,11 @@ class Container implements ArrayAccess, ContainerContract {
 	}
 
 	/**
-	 * Call the given Closure and inject its dependencies.
+	 * Call the given Closure / class@method and inject its dependencies.
 	 *
-	 * @param  callable  $callback
+	 * @param  callable|string  $callback
 	 * @param  array  $parameters
+	 * @param  string|null  $defaultMethod
 	 * @return mixed
 	 */
 	public function call($callback, array $parameters = array(), $defaultMethod = null)
@@ -577,6 +661,11 @@ class Container implements ArrayAccess, ContainerContract {
 	 */
 	protected function getConcrete($abstract)
 	{
+		if ( ! is_null($concrete = $this->getContextualConcrete($abstract)))
+		{
+			return $concrete;
+		}
+
 		// If we don't have a registered resolver or concrete for the type, we'll just
 		// assume each type is a concrete name and will attempt to resolve it as is
 		// since the container should be able to resolve concretes automatically.
@@ -589,9 +678,21 @@ class Container implements ArrayAccess, ContainerContract {
 
 			return $abstract;
 		}
-		else
+
+		return $this->bindings[$abstract]['concrete'];
+	}
+
+	/**
+	 * Get the contextual concrete binding for the given abstract.
+	 *
+	 * @param  string  $abstract
+	 * @return string
+	 */
+	protected function getContextualConcrete($abstract)
+	{
+		if (isset($this->contextual[last($this->buildStack)][$abstract]))
 		{
-			return $this->bindings[$abstract]['concrete'];
+			return $this->contextual[last($this->buildStack)][$abstract];
 		}
 	}
 
@@ -637,6 +738,8 @@ class Container implements ArrayAccess, ContainerContract {
 			throw new BindingResolutionException($message);
 		}
 
+		$this->buildStack[] = $concrete;
+
 		$constructor = $reflector->getConstructor();
 
 		// If there are no constructors, that means there are no dependencies then
@@ -644,6 +747,8 @@ class Container implements ArrayAccess, ContainerContract {
 		// resolving any other types or dependencies out of these containers.
 		if (is_null($constructor))
 		{
+			array_pop($this->buildStack);
+
 			return new $concrete;
 		}
 
@@ -659,6 +764,8 @@ class Container implements ArrayAccess, ContainerContract {
 		$instances = $this->getDependencies(
 			$dependencies, $parameters
 		);
+
+		array_pop($this->buildStack);
 
 		return $reflector->newInstanceArgs($instances);
 	}

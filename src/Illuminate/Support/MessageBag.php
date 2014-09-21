@@ -5,8 +5,9 @@ use JsonSerializable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\MessageProvider;
+use Illuminate\Contracts\Support\MessageBag as MessageBagContract;
 
-class MessageBag implements Arrayable, Countable, Jsonable, MessageProvider, JsonSerializable {
+class MessageBag implements Arrayable, Countable, Jsonable, JsonSerializable, MessageBagContract, MessageProvider  {
 
 	/**
 	 * All of the registered messages.
@@ -177,7 +178,7 @@ class MessageBag implements Arrayable, Countable, Jsonable, MessageProvider, Jso
 		// We will simply spin through the given messages and transform each one
 		// replacing the :message place holder with the real message allowing
 		// the messages to be easily formatted to each developer's desires.
-		foreach ($messages as $key => &$message)
+		foreach ($messages as &$message)
 		{
 			$replace = array(':message', ':key');
 

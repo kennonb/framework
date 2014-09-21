@@ -27,7 +27,7 @@ class FilesystemManager implements FactoryContract {
 	protected $disks = [];
 
 	/**
-	 * Create a new queue manager instance.
+	 * Create a new filesystem manager instance.
 	 *
 	 * @param  \Illuminate\Foundation\Application  $app
 	 * @return void
@@ -75,18 +75,18 @@ class FilesystemManager implements FactoryContract {
 	}
 
 	/**
-	 * Create an instance of the given driver.
+	 * Create an instance of the local driver.
 	 *
 	 * @param  array  $config
 	 * @return \Illuminate\Contracts\Filesystem\Filesystem
 	 */
 	public function createLocalDriver(array $config)
 	{
-		return $this->decorate(new Flysystem(new LocalAdapter($config['root'])));
+		return $this->adapt(new Flysystem(new LocalAdapter($config['root'])));
 	}
 
 	/**
-	 * Create an instance of the given driver.
+	 * Create an instance of the Amazon S3 driver.
 	 *
 	 * @param  array  $config
 	 * @return \Illuminate\Contracts\Filesystem\Cloud
@@ -97,13 +97,13 @@ class FilesystemManager implements FactoryContract {
 			'key' => $config['key'], 'secret' => $config['secret'],
 		]);
 
-		return $this->decorate(
+		return $this->adapt(
 			new Flysystem(new S3Adapter($client, $config['bucket']))
 		);
 	}
 
 	/**
-	 * Create an instance of the given driver.
+	 * Create an instance of the Rackspace driver.
 	 *
 	 * @param  array  $config
 	 * @return \Illuminate\Contracts\Filesystem\Cloud
@@ -114,7 +114,7 @@ class FilesystemManager implements FactoryContract {
 			'username' => $config['username'], 'apiKey' => $config['key'],
 		]);
 
-		return $this->decorate(new Flysystem(
+		return $this->adapt(new Flysystem(
 			new RackspaceAdapter($this->getRackspaceContainer($client, $config))
 		));
 	}
@@ -134,14 +134,14 @@ class FilesystemManager implements FactoryContract {
 	}
 
 	/**
-	 * Decorate the filesystem implementation.
+	 * Adapt the filesystem implementation.
 	 *
 	 * @param  \League\Flysystem\FilesystemInterface  $filesystem
 	 * @return \Illuminate\Contracts\Filesystem\Filesystem
 	 */
-	protected function decorate(FilesystemInterface $filesystem)
+	protected function adapt(FilesystemInterface $filesystem)
 	{
-		return new FilesystemDecorator($filesystem);
+		return new FilesystemAdapter($filesystem);
 	}
 
 	/**

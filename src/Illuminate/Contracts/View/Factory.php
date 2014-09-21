@@ -14,11 +14,20 @@ interface Factory {
 	 * Get the evaluated view contents for the given view.
 	 *
 	 * @param  string  $view
-	 * @param  array   $data
-	 * @param  array   $mergeData
-	 * @return \Illuminate\View\View
+	 * @param  array  $data
+	 * @param  array  $mergeData
+	 * @return \Illuminate\Contracts\View\View
 	 */
 	public function make($view, $data = array(), $mergeData = array());
+
+	/**
+	 * Add a piece of shared data to the environment.
+	 *
+	 * @param  string  $key
+	 * @param  mixed  $value
+	 * @return void
+	 */
+	public function share($key, $value = null);
 
 	/**
 	 * Register a view composer event.
@@ -33,7 +42,7 @@ interface Factory {
 	/**
 	 * Register a view creator event.
 	 *
-	 * @param  array|string     $views
+	 * @param  array|string  $views
 	 * @param  \Closure|string  $callback
 	 * @return array
 	 */

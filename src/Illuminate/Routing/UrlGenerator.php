@@ -109,7 +109,7 @@ class UrlGenerator implements UrlGeneratorContract {
 	 *
 	 * @param  string  $path
 	 * @param  mixed  $extra
-	 * @param  bool  $secure
+	 * @param  bool|null  $secure
 	 * @return string
 	 */
 	public function to($path, $extra = array(), $secure = null)
@@ -151,7 +151,7 @@ class UrlGenerator implements UrlGeneratorContract {
 	 * Generate a URL to an application asset.
 	 *
 	 * @param  string  $path
-	 * @param  bool    $secure
+	 * @param  bool|null  $secure
 	 * @return string
 	 */
 	public function asset($path, $secure = null)
@@ -193,7 +193,7 @@ class UrlGenerator implements UrlGeneratorContract {
 	/**
 	 * Get the scheme for a raw URL.
 	 *
-	 * @param  bool    $secure
+	 * @param  bool|null  $secure
 	 * @return string
 	 */
 	protected function getScheme($secure)
@@ -202,10 +202,8 @@ class UrlGenerator implements UrlGeneratorContract {
 		{
 			return $this->forceSchema ?: $this->request->getScheme().'://';
 		}
-		else
-		{
-			return $secure ? 'https://' : 'http://';
-		}
+
+		return $secure ? 'https://' : 'http://';
 	}
 
 	/**
@@ -225,18 +223,13 @@ class UrlGenerator implements UrlGeneratorContract {
 	 * @param  string  $name
 	 * @param  mixed   $parameters
 	 * @param  bool  $absolute
-	 * @param  \Illuminate\Routing\Route  $route
 	 * @return string
 	 *
 	 * @throws \InvalidArgumentException
 	 */
-	public function route($name, $parameters = array(), $absolute = true, $route = null)
+	public function route($name, $parameters = array(), $absolute = true)
 	{
-		$route = $route ?: $this->routes->getByName($name);
-
-		$parameters = $this->formatParameters($parameters);
-
-		if ( ! is_null($route))
+		if ( ! is_null($route = $this->routes->getByName($name)))
 		{
 			return $this->toRoute($route, $parameters, $absolute);
 		}
@@ -256,6 +249,8 @@ class UrlGenerator implements UrlGeneratorContract {
 	 */
 	protected function toRoute($route, array $parameters, $absolute)
 	{
+		$parameters = $this->formatParameters($parameters);
+
 		$domain = $this->getRouteDomain($route, $parameters);
 
 		$uri = strtr(rawurlencode($this->trimUrl(
@@ -445,10 +440,8 @@ class UrlGenerator implements UrlGeneratorContract {
 		{
 			return $domain;
 		}
-		else
-		{
-			return $domain .= ':'.$this->request->getPort();
-		}
+
+		return $domain.':'.$this->request->getPort();
 	}
 
 	/**
@@ -479,10 +472,8 @@ class UrlGenerator implements UrlGeneratorContract {
 		{
 			return $this->getScheme(true);
 		}
-		else
-		{
-			return $this->getScheme(null);
-		}
+
+		return $this->getScheme(null);
 	}
 
 	/**
@@ -504,7 +495,7 @@ class UrlGenerator implements UrlGeneratorContract {
 			$action = trim($action, '\\');
 		}
 
-		return $this->route($action, $parameters, $absolute, $this->routes->getByAction($action));
+		return $this->toRoute($this->routes->getByAction($action), $parameters, $absolute);
 	}
 
 	/**
