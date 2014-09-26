@@ -943,10 +943,8 @@ class Application extends Container implements HttpKernelInterface,
 		{
 			throw new NotFoundHttpException($message);
 		}
-		else
-		{
-			throw new HttpException($code, $message, null, $headers);
-		}
+
+		throw new HttpException($code, $message, null, $headers);
 	}
 
 	/**
@@ -1142,8 +1140,8 @@ class Application extends Container implements HttpKernelInterface,
 			'auth.reminder.repository' => 'Illuminate\Auth\Reminders\ReminderRepositoryInterface',
 			'blade.compiler' => 'Illuminate\View\Compilers\BladeCompiler',
 			'cache'          => ['Illuminate\Cache\CacheManager', 'Illuminate\Contracts\Cache\Factory'],
-			'cache.store'    => ['Illuminate\Cache\Repository', 'Illuminate\Contracts\Cache\Cache'],
-			'config'         => ['Illuminate\Config\Repository', 'Illuminate\Contracts\Config\Config'],
+			'cache.store'    => ['Illuminate\Cache\Repository', 'Illuminate\Contracts\Cache\Repository'],
+			'config'         => ['Illuminate\Config\Repository', 'Illuminate\Contracts\Config\Repository'],
 			'cookie'         => ['Illuminate\Cookie\CookieJar', 'Illuminate\Contracts\Cookie\Factory', 'Illuminate\Contracts\Cookie\QueueingFactory'],
 			'exception'      => 'Illuminate\Contracts\Exception\Handler',
 			'encrypter'      => ['Illuminate\Encryption\Encrypter', 'Illuminate\Contracts\Encryption\Encrypter'],
@@ -1159,7 +1157,7 @@ class Application extends Container implements HttpKernelInterface,
 			'mailer'         => ['Illuminate\Mail\Mailer', 'Illuminate\Contracts\Mail\Mailer', 'Illuminate\Contracts\Mail\MailQueue'],
 			'paginator'      => 'Illuminate\Pagination\Factory',
 			'auth.reminder'  => ['Illuminate\Auth\Reminders\PasswordBroker', 'Illuminate\Contracts\Auth\PasswordBroker'],
-			'queue'          => 'Illuminate\Queue\QueueManager',
+			'queue'          => ['Illuminate\Queue\QueueManager', 'Illuminate\Contracts\Queue\Factory'],
 			'queue.connection' => 'Illuminate\Contracts\Queue\Queue',
 			'redirect'       => 'Illuminate\Routing\Redirector',
 			'redis'          => ['Illuminate\Redis\Database', 'Illuminate\Contracts\Redis\Database'],

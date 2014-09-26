@@ -1199,7 +1199,7 @@ class Validator implements ValidatorContract {
 	}
 
 	/**
-	 * Check that the given value is a valid file instnace.
+	 * Check that the given value is a valid file instance.
 	 *
 	 * @param  mixed  $value
 	 * @return bool
@@ -1720,7 +1720,7 @@ class Validator implements ValidatorContract {
 	 */
 	protected function replaceDigitsBetween($message, $attribute, $rule, $parameters)
 	{
-		return str_replace(array(':min', ':max'), $parameters, $message);
+		return $this->replaceBetween($message, $attribute, $rule, $parameters);
 	}
 
 	/**

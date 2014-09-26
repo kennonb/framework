@@ -7,9 +7,8 @@ use ReflectionMethod;
 use ReflectionFunction;
 use ReflectionParameter;
 use Illuminate\Contracts\Container\Container as ContainerContract;
-use Illuminate\Contracts\Container\ContextAwareContainer as ContextAwareContainerContract;
 
-class Container implements ArrayAccess, ContainerContract, ContextAwareContainerContract {
+class Container implements ArrayAccess, ContainerContract {
 
 	/**
 	 * An array of the types that have been resolved.
@@ -819,12 +818,10 @@ class Container implements ArrayAccess, ContainerContract, ContextAwareContainer
 		{
 			return $parameter->getDefaultValue();
 		}
-		else
-		{
-			$message = "Unresolvable dependency resolving [$parameter] in class {$parameter->getDeclaringClass()->getName()}";
 
-			throw new BindingResolutionException($message);
-		}
+		$message = "Unresolvable dependency resolving [$parameter] in class {$parameter->getDeclaringClass()->getName()}";
+
+		throw new BindingResolutionException($message);
 	}
 
 	/**
@@ -851,10 +848,8 @@ class Container implements ArrayAccess, ContainerContract, ContextAwareContainer
 			{
 				return $parameter->getDefaultValue();
 			}
-			else
-			{
-				throw $e;
-			}
+
+			throw $e;
 		}
 	}
 
@@ -1008,9 +1003,7 @@ class Container implements ArrayAccess, ContainerContract, ContextAwareContainer
 	 */
 	protected function dropStaleInstances($abstract)
 	{
-		unset($this->instances[$abstract]);
-
-		unset($this->aliases[$abstract]);
+		unset($this->instances[$abstract], $this->aliases[$abstract]);
 	}
 
 	/**
@@ -1100,9 +1093,7 @@ class Container implements ArrayAccess, ContainerContract, ContextAwareContainer
 	 */
 	public function offsetUnset($key)
 	{
-		unset($this->bindings[$key]);
-
-		unset($this->instances[$key]);
+		unset($this->bindings[$key], $this->instances[$key]);
 	}
 
 	/**

@@ -1,9 +1,13 @@
 <?php namespace Illuminate\Http;
 
+use Closure;
 use SplFileInfo;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
+/**
+ * @property \Illuminate\Contracts\Auth\User  $user
+ */
 class Request extends SymfonyRequest {
 
 	/**
@@ -584,6 +588,45 @@ class Request extends SymfonyRequest {
 		}
 
 		return $this->getSession();
+	}
+
+	/**
+	 * Get the user resolver callback.
+	 *
+	 * @return \Closure
+	 */
+	public function getUserResolver()
+	{
+		return $this->userResolver ?: function() {};
+	}
+
+	/**
+	 * Set the user resolver callback.
+	 *
+	 * @param  \Closure  $callback
+	 * @return $this
+	 */
+	public function setUserResolver(Closure $callback)
+	{
+		$this->userResolver = $callback;
+
+		return $this;
+	}
+
+	/**
+	 * Dynamically handle retrieving Request properties.
+	 *
+	 * @param  string  $key
+	 * @return mixed
+	 */
+	public function __get($key)
+	{
+		if ($key == 'user')
+		{
+			return call_user_func($this->userResolver);
+		}
+
+		throw new \Exception("Property [{$key}] does not exist on the user.");
 	}
 
 }

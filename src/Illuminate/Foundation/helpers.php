@@ -1,5 +1,24 @@
 <?php
 
+if ( ! function_exists('abort'))
+{
+	/**
+	 * Throw an HttpException with the given data.
+	 *
+	 * @param  int     $code
+	 * @param  string  $message
+	 * @param  array   $headers
+	 * @return void
+	 *
+	 * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+	 * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+	 */
+	function abort($code, $message = '', array $headers = array())
+	{
+		return app()->abort($code, $message, $headers);
+	}
+}
+
 if ( ! function_exists('action'))
 {
 	/**
@@ -107,6 +126,35 @@ if ( ! function_exists('config'))
 	}
 }
 
+if ( ! function_exists('cookie'))
+{
+	/**
+	 * Create a new cookie instance.
+	 *
+	 * @param  string  $name
+	 * @param  string  $value
+	 * @param  int     $minutes
+	 * @param  string  $path
+	 * @param  string  $domain
+	 * @param  bool    $secure
+	 * @param  bool    $httpOnly
+	 * @return \Symfony\Component\HttpFoundation\Cookie
+	 */
+	function cookie($name = null, $value = null, $minutes = 0, $path = null, $domain = null, $secure = false, $httpOnly = true)
+	{
+		$cookie = app('Illuminate\Contracts\Cookie\Factory');
+
+		if (is_null($name))
+		{
+			return $cookie;
+		}
+		else
+		{
+			return $cookie->make($name, $value, $minutes, $path, $domain, $secure, $httpOnly);
+		}
+	}
+}
+
 if ( ! function_exists('csrf_token'))
 {
 	/**
@@ -176,6 +224,21 @@ if ( ! function_exists('info'))
 	}
 }
 
+if ( ! function_exists('old'))
+{
+	/**
+	 * Retrieve an old input item.
+	 *
+	 * @param  string  $key
+	 * @param  mixed   $default
+	 * @return mixed
+	 */
+	function old($key = null, $default = null)
+	{
+		return app('request')->old($key, $default);
+	}
+}
+
 if ( ! function_exists('patch'))
 {
 	/**
@@ -241,18 +304,42 @@ if ( ! function_exists('redirect'))
 	 * Get an instance of the redirector.
 	 *
 	 * @param  string|null  $to
+	 * @param  int  $status
 	 * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
 	 */
-	function redirect($to = null)
+	function redirect($to = null, $status = 302)
 	{
 		if ( ! is_null($to))
 		{
-			return app('redirect')->to($to);
+			return app('redirect')->to($to, $status);
 		}
 		else
 		{
 			return app('redirect');
 		}
+	}
+}
+
+if ( ! function_exists('response'))
+{
+	/**
+	 * Return a new response from the application.
+	 *
+	 * @param  string  $content
+	 * @param  int     $status
+	 * @param  array   $headers
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	function response($content = '', $status = 200, array $headers = array())
+	{
+		$factory = app('Illuminate\Contracts\Routing\ResponseFactory');
+
+		if (func_num_args() === 0)
+		{
+			return $factory;
+		}
+
+		return $factory->make($content, $status, $headers);
 	}
 }
 
@@ -363,7 +450,7 @@ if ( ! function_exists('url'))
 	 */
 	function url($path = null, $parameters = array(), $secure = null)
 	{
-		return app('url')->to($path, $parameters, $secure);
+		return app('Illuminate\Contracts\Routing\UrlGenerator')->to($path, $parameters, $secure);
 	}
 }
 
@@ -377,8 +464,17 @@ if ( ! function_exists('view'))
 	 * @param  array   $mergeData
 	 * @return \Illuminate\View\View
 	 */
-	function view($view, $data = array(), $mergeData = array())
+	function view($view = null, $data = array(), $mergeData = array())
 	{
-		return app('view')->make($view, $data, $mergeData);
+		$factory = app('Illuminate\Contracts\View\Factory');
+
+		if (func_num_args() === 0)
+		{
+			return $factory;
+		}
+		else
+		{
+			return $factory->make($view, $data, $mergeData);
+		}
 	}
 }

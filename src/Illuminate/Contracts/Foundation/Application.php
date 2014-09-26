@@ -5,6 +5,21 @@ use Illuminate\Contracts\Container\Container;
 interface Application extends Container {
 
 	/**
+	 * Get or check the current application environment.
+	 *
+	 * @param  mixed
+	 * @return string
+	 */
+	public function environment();
+
+	/**
+	 * Determine if the application is currently down for maintenance.
+	 *
+	 * @return bool
+	 */
+	public function isDownForMaintenance();
+
+	/**
 	 * Register a service provider with the application.
 	 *
 	 * @param  \Illuminate\Support\ServiceProvider|string  $provider
