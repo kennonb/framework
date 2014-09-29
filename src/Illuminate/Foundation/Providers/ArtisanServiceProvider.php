@@ -7,6 +7,7 @@ use Illuminate\Foundation\Console\DownCommand;
 use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Foundation\Console\TinkerCommand;
 use Illuminate\Foundation\Console\AppNameCommand;
+use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Foundation\Console\ChangesCommand;
 use Illuminate\Foundation\Console\OptimizeCommand;
 use Illuminate\Foundation\Console\RouteListCommand;
@@ -21,6 +22,8 @@ use Illuminate\Foundation\Console\ClearCompiledCommand;
 
 class ArtisanServiceProvider extends ServiceProvider {
 
+	use AppNamespaceDetectorTrait;
+
 	/**
 	 * Indicates if loading of the provider is deferred.
 	 *
@@ -34,22 +37,22 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 * @var array
 	 */
 	protected $commands = [
-		'AppName',
-		'Changes',
-		'ClearCompiled',
-		'ConsoleMake',
-		'Down',
-		'Environment',
-		'KeyGenerate',
-		'Optimize',
-		'ProviderMake',
-		'RequestMake',
-		'RouteCache',
-		'RouteClear',
-		'RouteList',
-		'Serve',
-		'Tinker',
-		'Up',
+		'AppName' => 'command.app.name',
+		'Changes' => 'command.changes',
+		'ClearCompiled' => 'command.clear-compiled',
+		'ConsoleMake' => 'command.console.make',
+		'Down' => 'command.down',
+		'Environment' => 'command.environment',
+		'KeyGenerate' => 'command.key.generate',
+		'Optimize' => 'command.optimize',
+		'ProviderMake' => 'command.provider.make',
+		'RequestMake' => 'command.request.make',
+		'RouteCache' => 'command.route.cache',
+		'RouteClear' => 'command.route.clear',
+		'RouteList' => 'command.route.list',
+		'Serve' => 'command.serve',
+		'Tinker' => 'command.tinker',
+		'Up' => 'command.up',
 	];
 
 	/**
@@ -67,18 +70,12 @@ class ArtisanServiceProvider extends ServiceProvider {
 			return new Artisan($app);
 		});
 
-		foreach ($this->commands as $command)
+		foreach (array_keys($this->commands) as $command)
 		{
-			$this->{"register{$command}Command"}();
+			call_user_func_array([$this, "register{$command}Command"], []);
 		}
 
-		$this->commands(
-			'command.changes', 'command.environment',
-			'command.route.cache', 'command.route.clear', 'command.route.list',
-			'command.request.make', 'command.tinker', 'command.console.make',
-			'command.key.generate', 'command.down', 'command.up', 'command.clear-compiled',
-			'command.optimize', 'command.serve', 'command.app.name', 'command.provider.make'
-		);
+		$this->commands(array_values($this->commands));
 	}
 
 	/**
@@ -90,7 +87,7 @@ class ArtisanServiceProvider extends ServiceProvider {
 	{
 		$this->app->bindShared('command.app.name', function($app)
 		{
-			return new AppNameCommand($app['composer'], $app['files']);
+			return new AppNameCommand($app['composer'], $app['files'], $this->getAppNamespace());
 		});
 	}
 
@@ -296,14 +293,7 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 */
 	public function provides()
 	{
-		return [
-			'artisan', 'command.changes', 'command.environment',
-			'command.route.cache', 'command.route.clear',
-			'command.route.list', 'command.request.make', 'command.tinker',
-			'command.console.make', 'command.key.generate', 'command.down',
-			'command.up', 'command.clear-compiled', 'command.optimize',
-			'command.serve', 'command.app.name', 'command.provider.make',
-		];
+		return array_merge(['artisan'], array_values($this->commands));
 	}
 
 }

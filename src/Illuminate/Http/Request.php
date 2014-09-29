@@ -5,9 +5,6 @@ use SplFileInfo;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
-/**
- * @property \Illuminate\Contracts\Auth\User  $user
- */
 class Request extends SymfonyRequest {
 
 	/**
@@ -354,10 +351,21 @@ class Request extends SymfonyRequest {
 
 		foreach ($files as $file)
 		{
-			if ($file instanceof SplFileInfo && $file->getPath() != '') return true;
+			if ($this->isValidFile($file)) return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Check that the given file is a valid file instance.
+	 *
+	 * @param  mixed  $file
+	 * @return bool
+	 */
+	protected function isValidFile($file)
+	{
+		return $file instanceof SplFileInfo && $file->getPath() != '';
 	}
 
 	/**
@@ -591,6 +599,16 @@ class Request extends SymfonyRequest {
 	}
 
 	/**
+	 * Get the user making the request.
+	 *
+	 * @return mixed
+	 */
+	public function user()
+	{
+		return call_user_func($this->getUserResolver());
+	}
+
+	/**
 	 * Get the user resolver callback.
 	 *
 	 * @return \Closure
@@ -611,22 +629,6 @@ class Request extends SymfonyRequest {
 		$this->userResolver = $callback;
 
 		return $this;
-	}
-
-	/**
-	 * Dynamically handle retrieving Request properties.
-	 *
-	 * @param  string  $key
-	 * @return mixed
-	 */
-	public function __get($key)
-	{
-		if ($key == 'user')
-		{
-			return call_user_func($this->userResolver);
-		}
-
-		throw new \Exception("Property [{$key}] does not exist on the user.");
 	}
 
 }
